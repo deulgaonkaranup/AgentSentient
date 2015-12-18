@@ -1,71 +1,124 @@
-# -*- coding: utf-8 -*-
 import numpy
 from agents import Agent
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.svm import SVC
 
 class Agent_sentient(Agent):
     
-    def calc_probability(self,array,value):
-        excellent = 0
-        for item in array:
-            if item == 'Excellent':
-                excellent = excellent + 1
+    def choose_the_best_classifier(self, X_train, y_train, X_val, y_val):
         
-        return excellent
-    
-    def train(self, X, y):
+        Domain       = numpy.zeros(3)
+        LogLoss      = numpy.zeros(3)
+        ZeroOneError = numpy.zeros(3)
+        prob         = numpy.zeros(3)
         
-        '''Identifying number of Features and Products'''
-        self.number_of_features = len(X[0])
-        self.number_of_products = len(y)   
+        '''Initialise the variables with default values'''
+        lr = LogisticRegression()
+        bnb = BernoulliNB()
+        svc = SVC()
+        svc.kernel = 'poly'
+        svc.degree = 4
+        svc.probability = True
+        svc.random_state = 0
         
-        '''Initializing Variables. feature_prob_distrib is a 2D array which stores the probability of feature/condition_of_prod
-        rows represent the feature and column 0 and 1 represent the Condition Excellent and Trash respectively'''
-        self.prob_excellent = 0.0
-        self.feature_prob_distrib = numpy.zeros((self.number_of_features,2))
+        '''Train all 3 classifiers on the training data'''
         
-        '''Calculate variable P(Excellent) using y array'''
-        no_of_excellent = self.calc_probability(y, 'Excellent')
-        self.prob_excellent = float(no_of_excellent) / len(y)
+        svc.fit(X_train, y_train)
+        bnb.fit(X_train, y_train)
+        lr.fit(X_train, y_train)
         
-        '''Using the array X and y, calculate probability and store it in feature_prob_distrib array
-           First count and then divide by total to get individual probability'''
-        for i in range(len(X)):
-            product_cond = y[i]
-            for j in range(len(X[0])):
-                if X[i][j] == True and product_cond == 'Excellent':
-                    self.feature_prob_distrib[j][0] = self.feature_prob_distrib[j][0] + 1
-                elif X[i][j] == True and product_cond == 'Trash':
-                    self.feature_prob_distrib[j][1] = self.feature_prob_distrib[j][1] + 1
-        
-        for i in range(len(self.feature_prob_distrib)):
-                self.feature_prob_distrib[i][0] = ( float(self.feature_prob_distrib[i][0]) / no_of_excellent )
-                self.feature_prob_distrib[i][1] = ( float(self.feature_prob_distrib[i][1]) / ( len(y) - no_of_excellent ) )
-        
-    def predict_prob_of_excellent(self, x):
-        
-        '''Initializing the variables'''
-        excellent_cummulative = 1
-        trash_cummulative = 1
-        
-        '''This method uses the array calculated in the train method to get the P(Excellent/features[]).
-        Equation for 5 features looks like :
-        P(Excellent / F1,F2,F3,F4,F5) = [ P(F1,F2,F3,F4,F5 / Excellent) * P(Excellent) ]  divided_by P(F1,F2,F3,F4,F5)
-        
-        This logic calculates: 
-        P(F1,F2,F3,F4,F5 / Excellent ) = P(F1 / Excellent) * P(F2/ Excellent) * P(F3/ Excellent) * P(F4/ Excellent) * P(F5 / Excellent)
-        and P(F1,F2,F3,F4,F5 / Trash) = P(F1 / Trash) * P(F2/ Trash) * P(F3/ Trash) * P(F4/ Trash) * P(F5 / Trash)'''
-        for i in range(len(x)):
-            if x[i] == True:
-                excellent_cummulative = excellent_cummulative * self.feature_prob_distrib[i][0]
-                trash_cummulative = trash_cummulative * self.feature_prob_distrib[i][1]
+        '''Three different kinds of tests on validation set for individual classifier'''
+        value = 1000
+        epsilon = 1e-10
+        ll = numpy.zeros(3);
+        error = numpy.zeros(3);
+        for i in range(len(y_val)):
+            prob[0] = bnb.predict_proba(X_val[i])[0][0]
+            prob[1] = lr.predict_proba(X_val[i])[0][0]
+            prob[2] = svc.predict_proba(X_val[i])[0][0]
+            
+            '''Domain relevant test, Results stored in Domain array size 3. 0 - BNB, 1 - LR, 2 - SVC'''
+            
+            for pt in range(10):
+                price = ((2*pt+1)*value)/(20)
+                if(value*prob[0] > price):
+                    Domain[0] -= price
+                    if y_val[i] == 'Excellent':
+                        Domain[0] += value
+                if(value*prob[1] > price):
+                    Domain[1] -= price
+                    if y_val[i] == 'Excellent':
+                        Domain[1] += value
+                if(value*prob[2] > price):
+                    Domain[2] -= price
+                    if y_val[i] == 'Excellent':
+                        Domain[2] += value
+            
+            '''Log-Loss Error Check, Results stored in ll array size 3. 0 - BNB, 1 - LR, 2 - SVC'''            
+            
+            if y_val[i] == 'Excellent':
+                '''This block for Excellent'''
+                ll[0] += -(numpy.log(prob[0]+epsilon))
+                ll[1] += -(numpy.log(prob[1]+epsilon))
+                ll[2] += -(numpy.log(prob[2]+epsilon))
+                
+                '''0/1 Error Check, Results stored in error array size 3. 0 - BNB, 1 - LR, 2 - SVC'''
+                
+                if prob[0] < 0.5:
+                    error[0] += 1
+                if prob[1] < 0.5:
+                    error[1] += 1
+                if prob[2] < 0.5:
+                    error[2] += 1
             else:
-                excellent_cummulative = excellent_cummulative * ( 1 - self.feature_prob_distrib[i][0] )
-                trash_cummulative = trash_cummulative * ( 1 - self.feature_prob_distrib[i][1] )
+                '''This block for Trash'''
+                ll[0] += -(numpy.log(1-prob[0]+epsilon))
+                ll[1] += -(numpy.log(1-prob[1]+epsilon))
+                ll[2] += -(numpy.log(1-prob[2]+epsilon))
+                
+                '''0/1 Error Check, Results stored in error array size 3. 0 - BNB, 1 - LR, 2 - SVC'''
+                
+                if prob[0] >= 0.5:
+                    error[0] += 1
+                if prob[1] >= 0.5:
+                    error[1] += 1
+                if prob[2] >= 0.5:
+                    error[2] += 1
         
-        '''P(F1,F2,F3,F4,F5) = P(F1,F2,F3,F4,F5 / Excellent ) * P(Excellent) + P(F1,F2,F3,F4,F5 / Trash) * (1 – P(Excellent))'''        
-        denominator = 0.0
-        denominator = ( ( excellent_cummulative * self.prob_excellent ) + ( trash_cummulative * ( 1 - self.prob_excellent ) ) )
+        count = numpy.zeros(3)
         
-        '''Calculate: P(Excellent / F1,F2,F3,F4,F5) = [ P(F1,F2,F3,F4,F5 / Excellent) * P(Excellent) ]  / P(F1,F2,F3,F4,F5)'''
-        if denominator != 0:
-            return ( float( self.prob_excellent * excellent_cummulative ) ) / denominator
+        '''Final Decision, Choose the best among the three which beats the maximum of the three criteria compared to other agents'''
+        
+        if Domain[0] > Domain[1] and Domain[0] > Domain[2]:
+                count[0] = count[0] + 1
+        elif Domain[1] > Domain[0] and Domain[1] > Domain[2]:
+                count[1] = count[1] + 1
+        elif Domain[2] > Domain[1] and Domain[2] > Domain[0]:
+              count[2] = count[2] + 1
+        
+        if ll[0] < ll[1] and ll[0] < ll[2]:
+                count[0] = count[0] + 1
+        elif ll[1] < ll[0] and ll[1] < ll[2]:
+                count[1] = count[1] + 1
+        elif ll[2] < ll[1] and ll[2] < ll[0]:
+              count[2] = count[2] + 1
+        
+        if error[0] < error[1] and error[0] < error[2]:
+                count[0] = count[0] + 1
+        elif error[1] < error[0] and error[1] < error[2]:
+                count[1] = count[1] + 1
+        elif error[2] < error[1] and error[2] < error[0]:
+              count[2] = count[2] + 1
+        
+        if count[0] > count[1] and count[0] > count[2]:
+            return BernoulliNB()
+        elif count[1] > count[0] and count[1] > count[2]:
+            return LogisticRegression()
+        elif count[2] > count[1] and count[2] > count[0]:
+            svc = SVC()
+            svc.kernel = 'poly'
+            svc.degree = 4
+            svc.probability = True
+            svc.random_state = 0
+            return svc
