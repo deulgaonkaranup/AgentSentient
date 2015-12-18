@@ -5,13 +5,10 @@ Simulate agents
 import numpy as np
 
 from agents import Agent_single_sklearn
-from Agent_adeulgao import Agent_adeulgao
+from Agent_sentient import Agent_sentient
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.svm import SVC
-
-# import your own agent. Change mbilgic to your own hawk id
-#from agent_mbilgic import Agent_mbilgic
 
 def simulate_agents(agents, value, X, y, price_trials = 10):
     
@@ -64,18 +61,6 @@ if __name__ == '__main__':
         agents = []
         
         agents.append(Agent_single_sklearn("bnb", BernoulliNB()))
-        # Add two more Agent_single_sklearn agents
-        # One that uses LogisticRegression using default constructor
-        agents.append(Agent_single_sklearn("lr", LogisticRegression()))
-        # One that uses SVC with polynomial kernel degree of 4 and
-        # probability estimates are turned on
-        svc = SVC()
-        svc.kernel = 'poly'
-        svc.degree = 4
-        svc.probability = True
-        svc.random_state = 0
-        agents.append(Agent_single_sklearn("svc", svc))
-        # Add your own agent; change mbilgic to your own hawk id
         agents.append(Agent_sentient("smartypants"))
         
         # Train the agents
