@@ -5,7 +5,7 @@ The agent base class as well as a baseline agent.
 from abc import abstractmethod
 
 
-class Agent(object):
+class SmartAgent(object):
     def __init__(self, name):
         self.name = name
     
