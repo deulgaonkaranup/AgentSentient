@@ -3,7 +3,7 @@ Simulate agents
 '''
 
 import numpy as np
-from Agent_adeulgao import Agent_adeulgao
+from Agent_sentient import Agent_sentient
 from agents import FixedProbAgent
 
 def simulate_agents(agents, value, X, y, price_trials = 10):
