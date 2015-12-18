@@ -2,7 +2,7 @@
 import numpy
 from agents import Agent
 
-class Agent_adeulgao(Agent):
+class Agent_sentient(Agent):
     
     def calc_probability(self,array,value):
         excellent = 0
