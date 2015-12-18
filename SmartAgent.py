@@ -42,18 +42,8 @@ class SmartAgent(object):
         """This method choses the 'best' sklearn classifier, which
         when trained on <X_train, y_train> and performs
         the 'best' on <X_val, y_val>.
-        Search over three classifiers:
-        1. A BernoulliNB with default constructor.
-        2. A LogisticRegression with default constructor.
-        3. An SVC that has a degree 4 polynomial kernel and
-        probability estimates are turned on.
-        Your agent should choose the best classifier for the job.
-        You should define what it means to be the 'best'.
-        This method should return an untrained newly constructed
-        object that is an instance of the best chosen classifier.
         OVERRIDE this method."""
         
-
     def predict_prob_of_excellent(self, x):
         """Given a single product, predict and return
         the probability of the product being Excellent.
@@ -72,4 +62,3 @@ class Agent_single_sklearn(Agent):
     def choose_the_best_classifier(self, X_train, y_train, X_val, y_val):
         "Simply return the classifier that was provided to the constructor."
         return self.clf
-
