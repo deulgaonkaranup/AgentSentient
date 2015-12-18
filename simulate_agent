@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # You might need to change this depending on where the data is located
     data_path = "./"
-    data_groups = ["dataset1", "dataset2", "dataset3"]
+    data_groups = ["dataset1"]
     for data_group in data_groups:
         
         train_file = data_path + data_group +  "_train.csv"
