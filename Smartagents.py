@@ -62,4 +62,3 @@ class FixedProbAgent(Agent):
         """Simply ignore x and return the fixed probability value
         no matter what."""
         return self.fixed_prob
-
