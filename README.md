@@ -1,6 +1,4 @@
-# AgentSentient
-Sentient Program for Market Prediction for product This agent helps you to categorize the product as excellent or trash given certain features which are boolean variables. It classifies using BNB classifier implemented in the AgentSentient train and predict methods.
+# Agent - Suggestions for buying a product in an e-commerce domain
 
-The file is divided into two parts: 1. Base Agent: smartagent file 2. Agent Implementation: Agent_sentient - which is aware of everything hmm atleast in this scenario if trained well :)
-
-You can run the program by using the simulate agent which tests the agent implementation with some base dumb agents.
+Agent predicts the product being excellent/trash given its feature sets and recommends user to buy/pass with probabilities.
+It uses different models like Multinomial-NB, LR, SVM Functions to predict and train
