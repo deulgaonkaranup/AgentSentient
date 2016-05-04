@@ -2,7 +2,7 @@
 
 Given a set of product features the task of the agent is to predict of the product could be purchased.
 
-The agent outputs a probability of product being excellent by looking at a set of features. The Agent is an <a>ensemble</a> of different classification model:
+The agent outputs a probability of product being excellent by looking at a set of features. The Agent is an <b>ensemble</b> of different classification model:
 
 1. Multinomial-Naive Bayes
 2. Logistic Regression
